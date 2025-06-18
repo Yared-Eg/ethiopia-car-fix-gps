@@ -1,9 +1,18 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Input } from "@/components/ui/input";
+import React, { useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation } from "lucide-react";
+import { Navigation } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+
+// Fix for default markers in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface Mechanic {
   id: number;
@@ -22,26 +31,67 @@ interface MapProps {
 
 const Map: React.FC<MapProps> = ({ mechanics }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+
+  const addMechanicMarkers = (map: L.Map) => {
+    // Clear existing markers
+    markersRef.current.forEach(marker => map.removeLayer(marker));
+    markersRef.current = [];
+
+    // Mock coordinates for mechanics in Addis Ababa
+    const mechanicLocations = [
+      { lat: 9.0320, lng: 38.7469, mechanic: mechanics[0] }, // Bole area
+      { lat: 9.0301, lng: 38.7535, mechanic: mechanics[1] }, // Piazza area
+      { lat: 9.0157, lng: 38.7634, mechanic: mechanics[2] }, // Kazanchis area
+    ];
+
+    mechanicLocations.forEach(({ lat, lng, mechanic }) => {
+      if (mechanic) {
+        const marker = L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(`
+            <div class="p-2">
+              <h3 class="font-semibold text-sm">${mechanic.name}</h3>
+              <p class="text-xs text-gray-600">${mechanic.specialization}</p>
+              <p class="text-xs">⭐ ${mechanic.rating} • ${mechanic.distance}km away</p>
+              <p class="text-xs ${mechanic.isAvailable ? 'text-green-600' : 'text-red-600'}">
+                ${mechanic.isAvailable ? '✅ Available' : '❌ Unavailable'}
+              </p>
+              <p class="text-xs mt-1">${mechanic.phone}</p>
+            </div>
+          `);
+        
+        markersRef.current.push(marker);
+      }
+    });
+  };
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+          const { latitude, longitude } = position.coords;
+          
+          if (mapRef.current) {
+            mapRef.current.setView([latitude, longitude], 15);
+            
+            // Add user location marker
+            L.marker([latitude, longitude])
+              .addTo(mapRef.current)
+              .bindPopup('📍 Your Location')
+              .openPopup();
+          }
+          
           toast({
             title: "Location found",
-            description: "Your current location has been detected",
+            description: "Map centered on your location",
           });
         },
         () => {
           toast({
             title: "Location error",
-            description: "Unable to get your location. Please enable GPS.",
+            description: "Unable to get your location. Showing Addis Ababa.",
             variant: "destructive"
           });
         }
@@ -49,89 +99,50 @@ const Map: React.FC<MapProps> = ({ mechanics }) => {
     }
   };
 
-  const initializeMap = () => {
-    if (!mapboxToken.trim()) {
-      toast({
-        title: "Mapbox Token Required",
-        description: "Please enter your Mapbox public token to view the map",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Here we would initialize the actual Mapbox map
-    // For now, we'll show a placeholder with mechanic locations
-    toast({
-      title: "Map Loading",
-      description: "Map is being initialized with nearby mechanics",
-    });
-  };
-
   useEffect(() => {
+    if (!mapContainer.current || mapRef.current) return;
+
+    // Initialize map centered on Addis Ababa
+    const map = L.map(mapContainer.current).setView([9.0320, 38.7469], 13);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    // Add mechanic markers
+    addMechanicMarkers(map);
+
+    // Get user location on load
     getCurrentLocation();
+
+    // Cleanup function
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
   }, []);
+
+  // Update markers when mechanics data changes
+  useEffect(() => {
+    if (mapRef.current) {
+      addMechanicMarkers(mapRef.current);
+    }
+  }, [mechanics]);
 
   return (
     <div className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden">
-      {/* Mapbox Token Input */}
-      {!mapboxToken && (
-        <div className="absolute inset-0 bg-white/95 z-10 flex items-center justify-center p-6">
-          <div className="text-center max-w-md">
-            <MapPin className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-            <h3 className="text-lg font-semibold mb-2">Map Setup Required</h3>
-            <p className="text-gray-600 mb-4 text-sm">
-              Enter your Mapbox public token to view mechanics on the map. 
-              Get your token from https://mapbox.com/
-            </p>
-            <div className="space-y-3">
-              <Input
-                placeholder="Enter Mapbox public token (pk.eyJ1...)"
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                className="w-full"
-              />
-              <Button onClick={initializeMap} className="w-full">
-                Load Map
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Map Placeholder */}
-      <div className="w-full h-full bg-gradient-to-br from-blue-100 to-green-100 relative">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <Navigation className="h-16 w-16 mx-auto mb-4 text-blue-600" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Finding Mechanics Near You
-            </h3>
-            <p className="text-gray-600">
-              {userLocation ? 
-                `Located at ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}` :
-                "Detecting your location..."
-              }
-            </p>
-          </div>
-        </div>
-
-        {/* Mock mechanic markers */}
-        <div className="absolute top-4 left-4 bg-red-500 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold">
-          1
-        </div>
-        <div className="absolute top-12 right-8 bg-green-500 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold">
-          2
-        </div>
-        <div className="absolute bottom-8 left-1/3 bg-blue-500 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold">
-          3
-        </div>
-      </div>
-
+      <div ref={mapContainer} className="w-full h-full" />
+      
       {/* Location Button */}
       <Button
         onClick={getCurrentLocation}
         size="icon"
-        className="absolute bottom-4 right-4 bg-white text-gray-800 hover:bg-gray-50 shadow-lg"
+        className="absolute bottom-4 right-4 bg-white text-gray-800 hover:bg-gray-50 shadow-lg z-[1000]"
       >
         <Navigation className="h-4 w-4" />
       </Button>
