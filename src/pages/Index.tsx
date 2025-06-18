@@ -6,6 +6,7 @@ import MechanicCard from "@/components/MechanicCard";
 import ServiceRequest from "@/components/ServiceRequest";
 import EmergencyButton from "@/components/EmergencyButton";
 import ServiceHistory from "@/components/ServiceHistory";
+import OrderTracking from "@/components/OrderTracking";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -67,10 +68,11 @@ const Index = () => {
         <EmergencyButton />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4 sm:mb-6 h-9 sm:h-10">
+          <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 h-9 sm:h-10">
             <TabsTrigger value="map" className="text-xs sm:text-sm">Map</TabsTrigger>
             <TabsTrigger value="mechanics" className="text-xs sm:text-sm">Mechanics</TabsTrigger>
             <TabsTrigger value="request" className="text-xs sm:text-sm">Request</TabsTrigger>
+            <TabsTrigger value="tracking" className="text-xs sm:text-sm">Tracking</TabsTrigger>
             <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
           </TabsList>
 
@@ -94,6 +96,10 @@ const Index = () => {
 
           <TabsContent value="request" className="space-y-4 mt-0">
             <ServiceRequest selectedMechanic={selectedMechanic} />
+          </TabsContent>
+
+          <TabsContent value="tracking" className="space-y-4 mt-0">
+            <OrderTracking />
           </TabsContent>
 
           <TabsContent value="history" className="space-y-4 mt-0">
