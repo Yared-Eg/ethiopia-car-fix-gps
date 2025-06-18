@@ -51,8 +51,8 @@ const Map: React.FC<MapProps> = ({ mechanics }) => {
         const marker = L.marker([lat, lng])
           .addTo(map)
           .bindPopup(`
-            <div class="p-2">
-              <h3 class="font-semibold text-sm">${mechanic.name}</h3>
+            <div class="p-2 text-sm">
+              <h3 class="font-semibold">${mechanic.name}</h3>
               <p class="text-xs text-gray-600">${mechanic.specialization}</p>
               <p class="text-xs">⭐ ${mechanic.rating} • ${mechanic.distance}km away</p>
               <p class="text-xs ${mechanic.isAvailable ? 'text-green-600' : 'text-red-600'}">
@@ -135,16 +135,16 @@ const Map: React.FC<MapProps> = ({ mechanics }) => {
   }, [mechanics]);
 
   return (
-    <div className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden">
+    <div className="relative w-full h-64 sm:h-80 md:h-96 bg-gray-100 rounded-lg overflow-hidden">
       <div ref={mapContainer} className="w-full h-full" />
       
       {/* Location Button */}
       <Button
         onClick={getCurrentLocation}
         size="icon"
-        className="absolute bottom-4 right-4 bg-white text-gray-800 hover:bg-gray-50 shadow-lg z-[1000]"
+        className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white text-gray-800 hover:bg-gray-50 shadow-lg z-[1000] h-9 w-9 sm:h-10 sm:w-10"
       >
-        <Navigation className="h-4 w-4" />
+        <Navigation className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
     </div>
   );

@@ -54,12 +54,12 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
       <Header />
       
-      <main className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <main className="px-3 py-4 sm:px-4 sm:py-6 max-w-7xl mx-auto">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             🚗 CarFix Ethiopia
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Find trusted mechanics near you • Get instant car repair assistance
           </p>
         </div>
@@ -67,21 +67,21 @@ const Index = () => {
         <EmergencyButton />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="map">Map</TabsTrigger>
-            <TabsTrigger value="mechanics">Mechanics</TabsTrigger>
-            <TabsTrigger value="request">Request Service</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 mb-4 sm:mb-6 h-9 sm:h-10">
+            <TabsTrigger value="map" className="text-xs sm:text-sm">Map</TabsTrigger>
+            <TabsTrigger value="mechanics" className="text-xs sm:text-sm">Mechanics</TabsTrigger>
+            <TabsTrigger value="request" className="text-xs sm:text-sm">Request</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="map" className="space-y-4">
+          <TabsContent value="map" className="space-y-4 mt-0">
             <Card className="p-0 overflow-hidden">
               <Map mechanics={nearbyMechanics} />
             </Card>
           </TabsContent>
 
-          <TabsContent value="mechanics" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <TabsContent value="mechanics" className="space-y-4 mt-0">
+            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {nearbyMechanics.map((mechanic) => (
                 <MechanicCard
                   key={mechanic.id}
@@ -92,11 +92,11 @@ const Index = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="request" className="space-y-4">
+          <TabsContent value="request" className="space-y-4 mt-0">
             <ServiceRequest selectedMechanic={selectedMechanic} />
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-4">
+          <TabsContent value="history" className="space-y-4 mt-0">
             <ServiceHistory />
           </TabsContent>
         </Tabs>
